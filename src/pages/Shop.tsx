@@ -1,9 +1,12 @@
+
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Newsletter from '@/components/Newsletter';
 import ProductFilters from '@/components/ProductFilters';
 import ProductCard from '@/components/ProductCard';
+import SearchBar from '@/components/SearchBar';
 import { Coffee } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,6 +29,7 @@ const Shop = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const { cartItems } = useCart();
   const { toast } = useToast();
   
@@ -55,10 +59,24 @@ const Shop = () => {
       setIsLoading(false);
     }
   };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
   
-  // Filter and sort products when category or sorting changes
+  // Filter and sort products when category, sorting, or search query changes
   useEffect(() => {
     let result = [...products];
+    
+    // Filter by search query
+    if (searchQuery.trim() !== '') {
+      const lowerQuery = searchQuery.toLowerCase();
+      result = result.filter(product => 
+        product.name.toLowerCase().includes(lowerQuery) || 
+        product.description.toLowerCase().includes(lowerQuery) ||
+        product.category.toLowerCase().includes(lowerQuery)
+      );
+    }
     
     // Filter by category
     if (activeCategory !== 'all') {
@@ -88,12 +106,12 @@ const Shop = () => {
         });
         break;
       default:
-        // Default sorting by ID
+        // Default sorting by name
         result.sort((a, b) => a.name.localeCompare(b.name));
     }
     
     setFilteredProducts(result);
-  }, [products, activeCategory, sorting]);
+  }, [products, activeCategory, sorting, searchQuery]);
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -110,6 +128,10 @@ const Shop = () => {
         </div>
         
         <div className="container mx-auto px-4 py-12">
+          <div className="mb-8">
+            <SearchBar onSearch={handleSearch} className="max-w-md mx-auto" />
+          </div>
+          
           <div className="lg:flex gap-8">
             <div className="lg:w-1/4 mb-8 lg:mb-0">
               <ProductFilters 
@@ -145,7 +167,7 @@ const Shop = () => {
                         id={parseInt(product.id.replace(/-/g, '').substring(0, 8), 16)}
                         name={product.name}
                         price={product.price}
-                        image={product.image_url}
+                        image={product.image_url || ''}
                         category={product.category}
                         description={product.description}
                         stock={product.stock}

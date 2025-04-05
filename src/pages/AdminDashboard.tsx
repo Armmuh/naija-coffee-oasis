@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -50,7 +49,6 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Product form state
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productName, setProductName] = useState('');
@@ -60,7 +58,6 @@ const AdminDashboard = () => {
   const [productStock, setProductStock] = useState('');
   const [productImage, setProductImage] = useState('');
   
-  // Order detail modal
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderStatus, setOrderStatus] = useState('');
@@ -73,7 +70,6 @@ const AdminDashboard = () => {
     }
   }, [user, isAdmin]);
 
-  // If not logged in or not an admin, redirect to login page
   if (!loading && (!user || !isAdmin)) {
     return <Navigate to="/" replace />;
   }
@@ -173,16 +169,14 @@ const AdminDashboard = () => {
       let result;
 
       if (editingProduct) {
-        // Update existing product
         result = await supabase
           .from('products')
           .update({
             ...productData,
-            updated_at: new Date()
+            updated_at: new Date().toISOString()
           })
           .eq('id', editingProduct.id);
       } else {
-        // Create new product
         result = await supabase
           .from('products')
           .insert([productData]);
@@ -247,7 +241,7 @@ const AdminDashboard = () => {
         .from('orders')
         .update({
           order_status: orderStatus,
-          updated_at: new Date()
+          updated_at: new Date().toISOString()
         })
         .eq('id', selectedOrder.id);
       
@@ -477,7 +471,6 @@ const AdminDashboard = () => {
       </main>
       <Footer />
 
-      {/* Product Dialog */}
       <Dialog open={isProductModalOpen} onOpenChange={setIsProductModalOpen}>
         <DialogContent className="sm:max-w-[525px]">
           <DialogHeader>
@@ -568,7 +561,6 @@ const AdminDashboard = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Order Detail Dialog */}
       {selectedOrder && (
         <Dialog open={isOrderModalOpen} onOpenChange={setIsOrderModalOpen}>
           <DialogContent className="sm:max-w-[600px]">

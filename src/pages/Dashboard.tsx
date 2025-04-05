@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -20,7 +19,6 @@ const Dashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   
-  // Profile form state
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
@@ -45,7 +43,6 @@ const Dashboard = () => {
     }
   }, [user]);
 
-  // If not logged in, redirect to login page
   if (!loading && !user) {
     return <Navigate to="/auth" replace />;
   }
@@ -78,13 +75,13 @@ const Dashboard = () => {
         .update({
           first_name: firstName,
           last_name: lastName,
-          phone,
-          address,
-          city,
-          state,
-          updated_at: new Date()
+          phone: phone,
+          address: address,
+          city: city,
+          state: state,
+          updated_at: new Date().toISOString()
         })
-        .eq('id', user?.id);
+        .eq('id', user!.id);
       
       if (error) throw error;
       

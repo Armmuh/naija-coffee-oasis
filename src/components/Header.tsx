@@ -24,16 +24,25 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from '@/components/ui/badge';
+import { useLocation } from 'react-router-dom';
+import SearchBar from '@/components/SearchBar';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { totalItems } = useCart();
   const { user, profile, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
+  };
+  
+  const handleSearch = (query: string) => {
+    navigate(`/shop?search=${encodeURIComponent(query)}`);
+    setIsSearchOpen(false);
   };
 
   return (
@@ -49,23 +58,40 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-coffee-dark hover:text-coffee-accent font-medium transition-colors">
+            <Link 
+              to="/" 
+              className={`${location.pathname === '/' ? 'text-coffee-accent' : 'text-coffee-dark'} hover:text-coffee-accent font-medium transition-colors`}
+            >
               Home
             </Link>
-            <Link to="/shop" className="text-coffee-dark hover:text-coffee-accent font-medium transition-colors">
+            <Link 
+              to="/shop" 
+              className={`${location.pathname === '/shop' ? 'text-coffee-accent' : 'text-coffee-dark'} hover:text-coffee-accent font-medium transition-colors`}
+            >
               Shop
             </Link>
-            <Link to="/about" className="text-coffee-dark hover:text-coffee-accent font-medium transition-colors">
+            <Link 
+              to="/about" 
+              className={`${location.pathname === '/about' ? 'text-coffee-accent' : 'text-coffee-dark'} hover:text-coffee-accent font-medium transition-colors`}
+            >
               About
             </Link>
-            <Link to="/contact" className="text-coffee-dark hover:text-coffee-accent font-medium transition-colors">
+            <Link 
+              to="/contact" 
+              className={`${location.pathname === '/contact' ? 'text-coffee-accent' : 'text-coffee-dark'} hover:text-coffee-accent font-medium transition-colors`}
+            >
               Contact
             </Link>
           </nav>
 
           {/* Desktop Cart & User */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="text-coffee-dark hover:text-coffee-accent">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-coffee-dark hover:text-coffee-accent"
+              onClick={() => setIsSearchOpen(true)}
+            >
               <Search size={20} />
             </Button>
             
@@ -125,6 +151,14 @@ const Header = () => {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-coffee-dark" 
+              onClick={() => setIsSearchOpen(true)}
+            >
+              <Search size={20} />
+            </Button>
             <Link to="/cart">
               <Button variant="ghost" size="icon" className="text-coffee-dark relative">
                 <ShoppingBag size={20} />
@@ -147,36 +181,33 @@ const Header = () => {
             <nav className="flex flex-col space-y-4">
               <Link 
                 to="/" 
-                className="text-coffee-dark hover:text-coffee-accent font-medium transition-colors px-2 py-1"
+                className={`${location.pathname === '/' ? 'text-coffee-accent' : 'text-coffee-dark'} hover:text-coffee-accent font-medium transition-colors px-2 py-1`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
               </Link>
               <Link 
                 to="/shop" 
-                className="text-coffee-dark hover:text-coffee-accent font-medium transition-colors px-2 py-1"
+                className={`${location.pathname === '/shop' ? 'text-coffee-accent' : 'text-coffee-dark'} hover:text-coffee-accent font-medium transition-colors px-2 py-1`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Shop
               </Link>
               <Link 
                 to="/about" 
-                className="text-coffee-dark hover:text-coffee-accent font-medium transition-colors px-2 py-1"
+                className={`${location.pathname === '/about' ? 'text-coffee-accent' : 'text-coffee-dark'} hover:text-coffee-accent font-medium transition-colors px-2 py-1`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 About
               </Link>
               <Link 
                 to="/contact" 
-                className="text-coffee-dark hover:text-coffee-accent font-medium transition-colors px-2 py-1"
+                className={`${location.pathname === '/contact' ? 'text-coffee-accent' : 'text-coffee-dark'} hover:text-coffee-accent font-medium transition-colors px-2 py-1`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Contact
               </Link>
               <div className="flex space-x-4 px-2 pt-2">
-                <Button variant="ghost" size="icon" className="text-coffee-dark hover:text-coffee-accent">
-                  <Search size={20} />
-                </Button>
                 {user ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -185,15 +216,24 @@ const Header = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                      <DropdownMenuItem onClick={() => {
+                        navigate('/dashboard');
+                        setIsMenuOpen(false);
+                      }}>
                         My Account
                       </DropdownMenuItem>
                       {isAdmin && (
-                        <DropdownMenuItem onClick={() => navigate('/admin')}>
+                        <DropdownMenuItem onClick={() => {
+                          navigate('/admin');
+                          setIsMenuOpen(false);
+                        }}>
                           Admin Dashboard
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem onClick={handleSignOut}>
+                      <DropdownMenuItem onClick={() => {
+                        handleSignOut();
+                        setIsMenuOpen(false);
+                      }}>
                         Sign Out
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -210,6 +250,24 @@ const Header = () => {
           </div>
         )}
       </div>
+      
+      {/* Search Dialog */}
+      <Sheet open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+        <SheetContent side="top" className="h-auto">
+          <SheetHeader className="mb-4">
+            <SheetTitle>Search Products</SheetTitle>
+            <SheetDescription>
+              Find the perfect coffee and accessories for your taste
+            </SheetDescription>
+          </SheetHeader>
+          <SearchBar onSearch={handleSearch} />
+          <SheetFooter className="mt-4 flex justify-end">
+            <SheetClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </SheetClose>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </header>
   );
 };
