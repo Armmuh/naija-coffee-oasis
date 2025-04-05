@@ -1,16 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
+import { Product } from '@/types/product';
 
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  category: string;
-}
-
-// Sample product data
+// Sample product data with added description and stock fields
 const sampleProducts: Product[] = [
   {
     id: 1,
@@ -18,6 +11,8 @@ const sampleProducts: Product[] = [
     price: 5999,
     image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?q=80&w=1770&auto=format&fit=crop',
     category: 'Coffee Beans',
+    description: 'Premium Nigerian coffee beans with rich flavors and a smooth finish.',
+    stock: 15
   },
   {
     id: 2,
@@ -25,6 +20,8 @@ const sampleProducts: Product[] = [
     price: 12500,
     image: 'https://images.unsplash.com/photo-1520903043060-bf3b12b4afa4?q=80&w=1769&auto=format&fit=crop',
     category: 'Accessories',
+    description: 'High-quality coffee maker designed for optimal extraction and brewing results.',
+    stock: 8
   },
   {
     id: 3,
@@ -32,6 +29,8 @@ const sampleProducts: Product[] = [
     price: 4500,
     image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=1934&auto=format&fit=crop',
     category: 'Coffee Beans',
+    description: 'Bold and aromatic dark roast made from locally sourced Nigerian beans.',
+    stock: 20
   },
   {
     id: 4,
@@ -39,6 +38,8 @@ const sampleProducts: Product[] = [
     price: 2999,
     image: 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?q=80&w=1770&auto=format&fit=crop',
     category: 'Accessories',
+    description: 'Beautifully crafted premium ceramic mug, perfect for your morning brew.',
+    stock: 12
   },
 ];
 
@@ -70,6 +71,8 @@ const FeaturedProducts = () => {
                 price={product.price}
                 image={product.image}
                 category={product.category}
+                description={product.description}
+                stock={product.stock}
               />
             </div>
           ))}
