@@ -61,7 +61,7 @@ const About = () => {
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="bg-white p-6 rounded-lg shadow-md transition-transform hover:scale-105">
                 <div className="w-12 h-12 bg-coffee-light rounded-full flex items-center justify-center mx-auto mb-4">
                   <Globe className="text-coffee-dark" />
                 </div>
@@ -71,7 +71,7 @@ const About = () => {
                 </p>
               </div>
               
-              <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="bg-white p-6 rounded-lg shadow-md transition-transform hover:scale-105">
                 <div className="w-12 h-12 bg-coffee-light rounded-full flex items-center justify-center mx-auto mb-4">
                   <Award className="text-coffee-dark" />
                 </div>
@@ -81,7 +81,7 @@ const About = () => {
                 </p>
               </div>
               
-              <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="bg-white p-6 rounded-lg shadow-md transition-transform hover:scale-105">
                 <div className="w-12 h-12 bg-coffee-light rounded-full flex items-center justify-center mx-auto mb-4">
                   <Leaf className="text-coffee-dark" />
                 </div>
@@ -91,7 +91,7 @@ const About = () => {
                 </p>
               </div>
               
-              <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="bg-white p-6 rounded-lg shadow-md transition-transform hover:scale-105">
                 <div className="w-12 h-12 bg-coffee-light rounded-full flex items-center justify-center mx-auto mb-4">
                   <Clock className="text-coffee-dark" />
                 </div>
@@ -169,7 +169,7 @@ const About = () => {
             </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="bg-white p-6 rounded-lg shadow-md transform transition-transform hover:scale-105">
                 <img 
                   src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1974&auto=format&fit=crop" 
                   alt="Adebayo Okafor" 
@@ -182,7 +182,7 @@ const About = () => {
                 </p>
               </div>
               
-              <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="bg-white p-6 rounded-lg shadow-md transform transition-transform hover:scale-105">
                 <img 
                   src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=2071&auto=format&fit=crop" 
                   alt="Amina Ibrahim" 
@@ -195,7 +195,7 @@ const About = () => {
                 </p>
               </div>
               
-              <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="bg-white p-6 rounded-lg shadow-md transform transition-transform hover:scale-105">
                 <img 
                   src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1974&auto=format&fit=crop" 
                   alt="Chukwu Eze" 

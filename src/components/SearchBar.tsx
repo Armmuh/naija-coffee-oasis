@@ -24,13 +24,13 @@ const SearchBar = ({ onSearch, className = '' }: SearchBarProps) => {
         placeholder="Search for coffee, accessories..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="pr-10"
+        className="pr-10 focus-visible:ring-coffee-accent focus-visible:border-coffee-accent rounded-full"
       />
       <Button 
         type="submit"
         size="icon"
         variant="ghost" 
-        className="absolute right-0 h-full"
+        className="absolute right-0 h-full text-coffee-dark hover:text-coffee-accent"
       >
         <Search size={18} />
       </Button>

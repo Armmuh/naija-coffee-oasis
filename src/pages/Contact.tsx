@@ -9,17 +9,55 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { MapPin, Phone, Mail, Coffee, Send } from 'lucide-react';
+import { z } from 'zod';
+
+// Form validation schema
+const contactFormSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  subject: z.string().min(3, { message: "Subject must be at least 3 characters" }),
+  message: z.string().min(10, { message: "Message must be at least 10 characters" }),
+});
 
 const Contact = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [subject, setSubject] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  const validateForm = () => {
+    try {
+      contactFormSchema.parse({ name, email, subject, message });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            newErrors[err.path[0].toString()] = err.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please check the form for errors.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
       setIsSubmitting(true);
@@ -27,14 +65,7 @@ const Contact = () => {
       // Store the contact form submission in Supabase
       const { error } = await supabase
         .from('contact_messages')
-        .insert([
-          {
-            name,
-            email,
-            subject,
-            message,
-          }
-        ]);
+        .insert([{ name, email, subject, message }]);
       
       if (error) throw error;
       
@@ -160,8 +191,9 @@ const Contact = () => {
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        required
+                        className={errors.name ? "border-red-500" : ""}
                       />
+                      {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                     </div>
                     
                     <div>
@@ -171,8 +203,9 @@ const Contact = () => {
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        required
+                        className={errors.email ? "border-red-500" : ""}
                       />
+                      {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                     </div>
                     
                     <div>
@@ -182,8 +215,9 @@ const Contact = () => {
                         type="text"
                         value={subject}
                         onChange={(e) => setSubject(e.target.value)}
-                        required
+                        className={errors.subject ? "border-red-500" : ""}
                       />
+                      {errors.subject && <p className="text-red-500 text-sm mt-1">{errors.subject}</p>}
                     </div>
                     
                     <div>
@@ -193,8 +227,9 @@ const Contact = () => {
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         rows={5}
-                        required
+                        className={errors.message ? "border-red-500" : ""}
                       />
+                      {errors.message && <p className="text-red-500 text-sm mt-1">{errors.message}</p>}
                     </div>
                     
                     <Button 
