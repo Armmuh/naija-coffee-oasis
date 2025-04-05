@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,8 +70,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) throw error;
       
-      setProfile(data);
-      setIsAdmin(data?.is_admin || false);
+      if (data) {
+        setProfile(data);
+        setIsAdmin(data?.is_admin || false);
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
     }

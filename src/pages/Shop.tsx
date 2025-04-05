@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Newsletter from '@/components/Newsletter';
-import ProductGrid from '@/components/ProductGrid';
 import ProductFilters from '@/components/ProductFilters';
+import ProductCard from '@/components/ProductCard';
 import { Coffee } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +17,7 @@ interface Product {
   category: string;
   image_url: string;
   stock: number;
+  created_at?: string;
 }
 
 const Shop = () => {
@@ -74,13 +74,18 @@ const Shop = () => {
         result.sort((a, b) => b.price - a.price);
         break;
       case 'name-asc':
-        result.sort((a, b) => a.name.localeString(b.name));
+        result.sort((a, b) => a.name.localeCompare(b.name));
         break;
       case 'name-desc':
-        result.sort((a, b) => b.name.localeString(a.name));
+        result.sort((a, b) => b.name.localeCompare(a.name));
         break;
       case 'newest':
-        result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        result.sort((a, b) => {
+          if (a.created_at && b.created_at) {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          }
+          return 0;
+        });
         break;
       default:
         // Default sorting by ID
