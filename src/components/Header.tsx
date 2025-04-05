@@ -3,9 +3,20 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, ShoppingBag, Search, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useCart } from '@/contexts/CartContext';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Badge } from '@/components/ui/badge';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { totalItems } = useCart();
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm">
@@ -39,19 +50,51 @@ const Header = () => {
             <Button variant="ghost" size="icon" className="text-coffee-dark hover:text-coffee-accent">
               <Search size={20} />
             </Button>
-            <Button variant="ghost" size="icon" className="text-coffee-dark hover:text-coffee-accent">
-              <User size={20} />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-coffee-dark hover:text-coffee-accent relative">
-              <ShoppingBag size={20} />
-              <span className="absolute -top-1 -right-1 bg-coffee-accent text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                0
-              </span>
-            </Button>
+            
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-coffee-dark hover:text-coffee-accent">
+                  <User size={20} />
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Account</SheetTitle>
+                  <SheetDescription>
+                    Please log in to access your account and place orders.
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="mt-8 space-y-4">
+                  <Button variant="outline" className="w-full">Sign In</Button>
+                  <Button className="w-full bg-coffee-dark hover:bg-coffee-accent">Create Account</Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+            
+            <Link to="/cart">
+              <Button variant="ghost" size="icon" className="text-coffee-dark hover:text-coffee-accent relative">
+                <ShoppingBag size={20} />
+                {totalItems > 0 && (
+                  <Badge className="absolute -top-1 -right-1 bg-coffee-accent text-white text-xs w-5 h-5 rounded-full flex items-center justify-center p-0">
+                    {totalItems > 99 ? '99+' : totalItems}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center space-x-2">
+            <Link to="/cart">
+              <Button variant="ghost" size="icon" className="text-coffee-dark relative">
+                <ShoppingBag size={20} />
+                {totalItems > 0 && (
+                  <Badge className="absolute -top-1 -right-1 bg-coffee-accent text-white text-xs w-5 h-5 rounded-full flex items-center justify-center p-0">
+                    {totalItems > 99 ? '99+' : totalItems}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
             <Button variant="ghost" size="icon" className="text-coffee-dark" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </Button>
@@ -96,12 +139,6 @@ const Header = () => {
                 </Button>
                 <Button variant="ghost" size="icon" className="text-coffee-dark hover:text-coffee-accent">
                   <User size={20} />
-                </Button>
-                <Button variant="ghost" size="icon" className="text-coffee-dark hover:text-coffee-accent relative">
-                  <ShoppingBag size={20} />
-                  <span className="absolute -top-1 -right-1 bg-coffee-accent text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                    0
-                  </span>
                 </Button>
               </div>
             </nav>
