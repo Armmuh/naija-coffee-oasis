@@ -1,19 +1,24 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Newsletter from '@/components/Newsletter';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, subTotal, clearCart } = useCart();
   const [couponCode, setCouponCode] = useState('');
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   
   // Calculate shipping cost
   const shippingCost = subTotal > 0 ? 1500 : 0; // ₦1,500 for shipping
@@ -26,6 +31,18 @@ const Cart = () => {
       variant: "destructive",
     });
     setCouponCode('');
+  };
+  
+  const handleCheckout = () => {
+    if (!user) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to proceed to checkout.",
+      });
+      navigate('/auth', { state: { returnUrl: '/checkout' } });
+    } else {
+      navigate('/checkout');
+    }
   };
 
   return (
@@ -60,6 +77,16 @@ const Cart = () => {
           ) : (
             <div className="lg:flex gap-8">
               <div className="lg:w-2/3 mb-8 lg:mb-0">
+                {!user && (
+                  <Alert className="mb-6">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Not signed in</AlertTitle>
+                    <AlertDescription>
+                      <Link to="/auth" className="font-medium underline">Sign in</Link> or create an account to save your cart and checkout.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
                 <div className="bg-white rounded-lg border border-border overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full">
@@ -90,7 +117,7 @@ const Cart = () => {
                               </div>
                             </td>
                             <td className="p-4 text-center whitespace-nowrap">
-                              ₦{item.price.toLocaleString()}
+                              ₦{(item.price / 100).toLocaleString()}
                             </td>
                             <td className="p-4">
                               <div className="flex items-center justify-center">
@@ -116,7 +143,7 @@ const Cart = () => {
                               </div>
                             </td>
                             <td className="p-4 text-center whitespace-nowrap font-medium">
-                              ₦{(item.price * item.quantity).toLocaleString()}
+                              ₦{((item.price * item.quantity) / 100).toLocaleString()}
                             </td>
                             <td className="p-4 text-center">
                               <Button
@@ -168,19 +195,22 @@ const Cart = () => {
                   <div className="space-y-3 mb-6">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span className="font-medium">₦{subTotal.toLocaleString()}</span>
+                      <span className="font-medium">₦{(subTotal / 100).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Shipping</span>
-                      <span>{shippingCost > 0 ? `₦${shippingCost.toLocaleString()}` : 'Free'}</span>
+                      <span>{shippingCost > 0 ? `₦${(shippingCost / 100).toLocaleString()}` : 'Free'}</span>
                     </div>
                     <div className="border-t border-border pt-3 flex justify-between">
                       <span className="font-medium">Total</span>
-                      <span className="font-bold text-xl">₦{total.toLocaleString()}</span>
+                      <span className="font-bold text-xl">₦{(total / 100).toLocaleString()}</span>
                     </div>
                   </div>
                   
-                  <Button className="w-full bg-coffee-dark hover:bg-coffee-accent text-white flex items-center justify-center gap-2">
+                  <Button 
+                    className="w-full bg-coffee-dark hover:bg-coffee-accent text-white flex items-center justify-center gap-2"
+                    onClick={handleCheckout}
+                  >
                     Proceed to Checkout
                     <ArrowRight className="h-4 w-4" />
                   </Button>

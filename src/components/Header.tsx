@@ -1,9 +1,10 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X, ShoppingBag, Search, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, X, ShoppingBag, Search, User, LogOut, ShoppingCart, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Sheet,
   SheetContent,
@@ -11,12 +12,29 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetClose,
+  SheetFooter,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Badge } from '@/components/ui/badge';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { totalItems } = useCart();
+  const { user, profile, signOut, isAdmin } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm">
@@ -51,25 +69,47 @@ const Header = () => {
               <Search size={20} />
             </Button>
             
-            <Sheet>
-              <SheetTrigger asChild>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-coffee-dark hover:text-coffee-accent relative">
+                    <User size={20} />
+                    {isAdmin && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-coffee-accent rounded-full"></span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>
+                    {profile?.first_name 
+                      ? `${profile.first_name} ${profile.last_name}` 
+                      : user.email}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                    <Package className="mr-2 h-4 w-4" />
+                    My Orders
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Admin Dashboard
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/auth">
                 <Button variant="ghost" size="icon" className="text-coffee-dark hover:text-coffee-accent">
                   <User size={20} />
                 </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Account</SheetTitle>
-                  <SheetDescription>
-                    Please log in to access your account and place orders.
-                  </SheetDescription>
-                </SheetHeader>
-                <div className="mt-8 space-y-4">
-                  <Button variant="outline" className="w-full">Sign In</Button>
-                  <Button className="w-full bg-coffee-dark hover:bg-coffee-accent">Create Account</Button>
-                </div>
-              </SheetContent>
-            </Sheet>
+              </Link>
+            )}
             
             <Link to="/cart">
               <Button variant="ghost" size="icon" className="text-coffee-dark hover:text-coffee-accent relative">
@@ -137,9 +177,34 @@ const Header = () => {
                 <Button variant="ghost" size="icon" className="text-coffee-dark hover:text-coffee-accent">
                   <Search size={20} />
                 </Button>
-                <Button variant="ghost" size="icon" className="text-coffee-dark hover:text-coffee-accent">
-                  <User size={20} />
-                </Button>
+                {user ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="text-coffee-dark hover:text-coffee-accent">
+                        <User size={20} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                        My Account
+                      </DropdownMenuItem>
+                      {isAdmin && (
+                        <DropdownMenuItem onClick={() => navigate('/admin')}>
+                          Admin Dashboard
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem onClick={handleSignOut}>
+                        Sign Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="ghost" size="icon" className="text-coffee-dark hover:text-coffee-accent">
+                      <User size={20} />
+                    </Button>
+                  </Link>
+                )}
               </div>
             </nav>
           </div>
