@@ -16,8 +16,7 @@ const AdminRegister = () => {
   const [loading, setLoading] = useState(false);
   
   // Form state
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -25,8 +24,7 @@ const AdminRegister = () => {
   
   // Error states
   const [errors, setErrors] = useState({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -36,23 +34,16 @@ const AdminRegister = () => {
   const validateForm = () => {
     let valid = true;
     const newErrors = {
-      firstName: '',
-      lastName: '',
+      fullName: '',
       email: '',
       password: '',
       confirmPassword: '',
       registrationCode: ''
     };
     
-    // Validate first name
-    if (!firstName.trim()) {
-      newErrors.firstName = 'First name is required';
-      valid = false;
-    }
-    
-    // Validate last name
-    if (!lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
+    // Validate full name
+    if (!fullName.trim()) {
+      newErrors.fullName = 'Full name is required';
       valid = false;
     }
     
@@ -84,6 +75,9 @@ const AdminRegister = () => {
     if (!registrationCode.trim()) {
       newErrors.registrationCode = 'Registration code is required';
       valid = false;
+    } else if (registrationCode !== 'SECRET123') {
+      newErrors.registrationCode = 'Invalid Admin Registration Code';
+      valid = false;
     }
     
     setErrors(newErrors);
@@ -100,31 +94,23 @@ const AdminRegister = () => {
     setLoading(true);
     
     try {
-      // First, validate the registration code
-      const { data: isValidCode, error: codeValidationError } = await supabase
-        .rpc('validate_admin_code', { registration_code: registrationCode });
-        
-      if (codeValidationError) {
-        throw new Error('Failed to validate registration code');
-      }
-      
-      if (!isValidCode) {
+      // Registration code is hardcoded to SECRET123
+      if (registrationCode !== 'SECRET123') {
         setErrors(prev => ({
           ...prev,
-          registrationCode: 'Invalid or expired registration code'
+          registrationCode: 'Invalid Admin Registration Code'
         }));
         setLoading(false);
         return;
       }
       
-      // Registration code is valid, proceed with user registration
+      // Proceed with user registration
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            first_name: firstName,
-            last_name: lastName,
+            full_name: fullName,
             is_admin: true
           }
         }
@@ -133,26 +119,30 @@ const AdminRegister = () => {
       if (signUpError) throw signUpError;
       
       if (authData.user) {
-        // Mark the registration code as used
-        const { error: useCodeError } = await supabase
-          .rpc('use_admin_code', { 
-            registration_code: registrationCode, 
-            user_id: authData.user.id 
-          });
+        // Insert into admins table
+        const { error: adminInsertError } = await supabase
+          .from('admins')
+          .insert([
+            { 
+              id: authData.user.id,
+              full_name: fullName,
+              email: email,
+            }
+          ]);
           
-        if (useCodeError) {
-          console.error('Failed to mark code as used:', useCodeError);
+        if (adminInsertError) {
+          console.error('Failed to insert admin record:', adminInsertError);
+          throw new Error('Failed to create admin record');
         }
         
         toast({
           title: 'Registration Successful',
-          description: 'Your admin account has been created. You can now log in.',
+          description: 'Your admin account has been created. Redirecting to dashboard.',
           variant: 'default',
         });
         
-        // Sign out the user after registration to force them to log in again
-        await supabase.auth.signOut();
-        navigate('/admin/login');
+        // Redirect to admin dashboard
+        navigate('/admin');
       }
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -189,32 +179,17 @@ const AdminRegister = () => {
               </CardHeader>
               
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      className={errors.firstName ? "border-destructive" : ""}
-                    />
-                    {errors.firstName && (
-                      <p className="text-sm text-destructive">{errors.firstName}</p>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      className={errors.lastName ? "border-destructive" : ""}
-                    />
-                    {errors.lastName && (
-                      <p className="text-sm text-destructive">{errors.lastName}</p>
-                    )}
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className={errors.fullName ? "border-destructive" : ""}
+                  />
+                  {errors.fullName && (
+                    <p className="text-sm text-destructive">{errors.fullName}</p>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
