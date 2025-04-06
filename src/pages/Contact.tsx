@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -62,10 +61,10 @@ const Contact = () => {
     try {
       setIsSubmitting(true);
       
-      // Store the contact form submission in Supabase
+      // Store the contact form submission in Supabase using a more generic approach
       const { error } = await supabase
         .from('contact_messages')
-        .insert([{ name, email, subject, message }]);
+        .insert({ name, email, subject, message });
       
       if (error) throw error;
       
