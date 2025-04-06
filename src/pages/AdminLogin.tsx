@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Coffee, Lock } from 'lucide-react';
 import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import { useToast } from '@/components/ui/use-toast';
 
 const AdminLogin = () => {
@@ -48,7 +47,7 @@ const AdminLogin = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow py-16 bg-gray-50">
+      <main className="flex-grow py-16 bg-gradient-to-b from-coffee-light to-white">
         <div className="container mx-auto px-4 max-w-md">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-coffee-dark mb-4">
@@ -58,7 +57,7 @@ const AdminLogin = () => {
             <p className="text-muted-foreground mt-2">Sign in to manage your coffee store</p>
           </div>
           
-          <Card>
+          <Card className="border-coffee-medium shadow-lg">
             <form onSubmit={handleLogin}>
               <CardHeader>
                 <CardTitle>Administrator Login</CardTitle>
@@ -89,7 +88,7 @@ const AdminLogin = () => {
                   />
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="flex-col space-y-2">
                 <Button 
                   type="submit" 
                   className="w-full bg-coffee-dark hover:bg-coffee-accent"
@@ -97,12 +96,21 @@ const AdminLogin = () => {
                 >
                   {isLoading ? "Authenticating..." : "Login to Admin"}
                 </Button>
+                <p className="text-center text-sm">
+                  Need an admin account?{' '}
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto text-coffee-accent"
+                    onClick={() => window.location.href = '/admin/register'}
+                  >
+                    Register
+                  </Button>
+                </p>
               </CardFooter>
             </form>
           </Card>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

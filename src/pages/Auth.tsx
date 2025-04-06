@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Coffee } from 'lucide-react';
 import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 
 const Auth = () => {
   const { user, signIn, signUp } = useAuth();
@@ -60,7 +59,7 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow py-16 bg-gray-50">
+      <main className="flex-grow py-16 bg-gradient-to-b from-coffee-light to-white">
         <div className="container mx-auto px-4 max-w-md">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-coffee-dark mb-4">
@@ -203,7 +202,6 @@ const Auth = () => {
           </Tabs>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };
