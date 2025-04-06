@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -10,11 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
-import { Package, Users, Coffee, ShoppingCart, Trash2, Edit, FilePlus } from 'lucide-react';
+import { Package, Users, Coffee, ShoppingCart, Trash2, Edit, FilePlus, LogOut, BarChart3, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 interface Product {
   id: string;
@@ -40,9 +42,28 @@ interface Order {
   order_items: any[];
 }
 
+// Analytics mock data (replace with real data from Supabase)
+const salesData = [
+  { name: 'Jan', sales: 4000 },
+  { name: 'Feb', sales: 3000 },
+  { name: 'Mar', sales: 2000 },
+  { name: 'Apr', sales: 2780 },
+  { name: 'May', sales: 1890 },
+  { name: 'Jun', sales: 2390 },
+];
+
+const productCategoryData = [
+  { name: 'Coffee Beans', value: 400 },
+  { name: 'Ground Coffee', value: 300 },
+  { name: 'Coffee Equipment', value: 200 },
+  { name: 'Accessories', value: 100 },
+];
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
 const AdminDashboard = () => {
-  const { user, isAdmin, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState('products');
+  const { user, isAdmin, loading, signOut } = useAuth();
+  const [activeTab, setActiveTab] = useState('analytics');
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -62,6 +83,8 @@ const AdminDashboard = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderStatus, setOrderStatus] = useState('');
 
+  const [analyticsTimePeriod, setAnalyticsTimePeriod] = useState('month');
+
   useEffect(() => {
     if (user && isAdmin) {
       fetchProducts();
@@ -71,7 +94,7 @@ const AdminDashboard = () => {
   }, [user, isAdmin]);
 
   if (!loading && (!user || !isAdmin)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   const fetchProducts = async () => {
@@ -264,6 +287,14 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleAdminLogout = async () => {
+    await signOut();
+    toast({
+      title: "Admin Logout",
+      description: "You have been logged out of the admin panel.",
+    });
+  };
+
   if (loading || isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -276,16 +307,37 @@ const AdminDashboard = () => {
     );
   }
 
+  // Calculate analytics data
+  const totalRevenue = orders.reduce((sum, order) => sum + order.total_price, 0) / 100;
+  const totalOrders = orders.length;
+  const pendingOrders = orders.filter(order => order.order_status === 'pending').length;
+  const totalProducts = products.length;
+  const lowStockProducts = products.filter(product => product.stock < 10).length;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-grow py-12 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+            <Button 
+              onClick={handleAdminLogout} 
+              variant="outline" 
+              className="flex items-center"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <div className="flex mb-6">
               <TabsList className="mr-auto">
+                <TabsTrigger value="analytics" className="flex items-center">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Analytics
+                </TabsTrigger>
                 <TabsTrigger value="products" className="flex items-center">
                   <Coffee className="mr-2 h-4 w-4" />
                   Products
@@ -311,6 +363,162 @@ const AdminDashboard = () => {
               )}
             </div>
 
+            {/* Analytics Dashboard */}
+            <TabsContent value="analytics" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">₦{totalRevenue.toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground mt-1">+20.1% from last month</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Total Orders</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{totalOrders}</div>
+                    <p className="text-xs text-muted-foreground mt-1">{pendingOrders} orders pending</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Products</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{totalProducts}</div>
+                    <p className="text-xs text-muted-foreground mt-1">{lowStockProducts} low stock items</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Customers</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{users.length}</div>
+                    <p className="text-xs text-muted-foreground mt-1">+5 new this week</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="col-span-1">
+                  <CardHeader>
+                    <CardTitle>Sales Overview</CardTitle>
+                    <div className="flex items-center space-x-2">
+                      <Select value={analyticsTimePeriod} onValueChange={setAnalyticsTimePeriod}>
+                        <SelectTrigger className="w-36">
+                          <SelectValue placeholder="Select time period" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="week">This Week</SelectItem>
+                          <SelectItem value="month">This Month</SelectItem>
+                          <SelectItem value="year">This Year</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={salesData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="sales" stroke="#8884d8" activeDot={{ r: 8 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card className="col-span-1">
+                  <CardHeader>
+                    <CardTitle>Product Categories</CardTitle>
+                  </CardHeader>
+                  <CardContent className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={productCategoryData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {productCategoryData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recent Orders</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Order ID</TableHead>
+                          <TableHead>Customer</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {orders.slice(0, 5).map((order) => (
+                          <TableRow key={order.id}>
+                            <TableCell className="font-medium">
+                              #{order.id.slice(0, 8)}
+                            </TableCell>
+                            <TableCell>
+                              {order.profiles?.first_name} {order.profiles?.last_name}
+                            </TableCell>
+                            <TableCell>
+                              {new Date(order.created_at).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              ₦{(order.total_price / 100).toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              <span className={`px-2 py-1 rounded text-xs capitalize 
+                                ${order.order_status === 'pending' ? 'bg-yellow-100 text-yellow-800' : ''}
+                                ${order.order_status === 'paid' ? 'bg-green-100 text-green-800' : ''}
+                                ${order.order_status === 'shipped' ? 'bg-blue-100 text-blue-800' : ''}
+                                ${order.order_status === 'delivered' ? 'bg-green-100 text-green-800' : ''}
+                                ${order.order_status === 'cancelled' ? 'bg-red-100 text-red-800' : ''}
+                              `}>
+                                {order.order_status}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Products Tab */}
             <TabsContent value="products" className="border rounded-lg bg-white p-6">
               <Table>
                 <TableHeader>
@@ -371,6 +579,7 @@ const AdminDashboard = () => {
               </Table>
             </TabsContent>
 
+            {/* Orders Tab */}
             <TabsContent value="orders" className="border rounded-lg bg-white p-6">
               <Table>
                 <TableHeader>
@@ -432,6 +641,7 @@ const AdminDashboard = () => {
               </Table>
             </TabsContent>
 
+            {/* Users Tab */}
             <TabsContent value="users" className="border rounded-lg bg-white p-6">
               <Table>
                 <TableHeader>
@@ -471,6 +681,7 @@ const AdminDashboard = () => {
       </main>
       <Footer />
 
+      {/* Product Modal */}
       <Dialog open={isProductModalOpen} onOpenChange={setIsProductModalOpen}>
         <DialogContent className="sm:max-w-[525px]">
           <DialogHeader>
@@ -561,6 +772,7 @@ const AdminDashboard = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Order Modal */}
       {selectedOrder && (
         <Dialog open={isOrderModalOpen} onOpenChange={setIsOrderModalOpen}>
           <DialogContent className="sm:max-w-[600px]">
