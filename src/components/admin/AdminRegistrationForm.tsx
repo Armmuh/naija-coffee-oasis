@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { supabase } from '@/integrations/supabase/client';
 import { insertAdminRecord } from '@/integrations/supabase/rpc';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ExclamationTriangleIcon } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 // Secret admin code constant
 const ADMIN_SECRET_CODE = 'SECRET123';
@@ -201,7 +201,7 @@ export const AdminRegistrationForm = () => {
         <CardContent className="space-y-4">
           {generalError && (
             <Alert variant="destructive" className="mb-4">
-              <ExclamationTriangleIcon className="h-4 w-4" />
+              <AlertTriangle className="h-4 w-4" />
               <AlertDescription>{generalError}</AlertDescription>
             </Alert>
           )}
