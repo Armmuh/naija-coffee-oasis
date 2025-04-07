@@ -286,6 +286,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      insert_admin_record: {
+        Args: { admin_id: string; admin_full_name: string; admin_email: string }
+        Returns: undefined
+      }
       use_admin_code: {
         Args: { registration_code: string; user_id: string }
         Returns: boolean

@@ -11,9 +11,27 @@ export const insertAdminRecord = async (
   fullName: string, 
   email: string
 ) => {
-  return await supabase.rpc('insert_admin_record', {
-    admin_id: adminId,
-    admin_full_name: fullName,
-    admin_email: email
+  // Using the raw query functionality instead of rpc for type safety
+  return await supabase.from('admins').insert({
+    id: adminId,
+    full_name: fullName,
+    email: email
+  });
+};
+
+/**
+ * Validate an admin registration code
+ */
+export const validateAdminCode = async (code: string) => {
+  return await supabase.rpc('validate_admin_code', { registration_code: code });
+};
+
+/**
+ * Use an admin registration code
+ */
+export const useAdminCode = async (code: string, userId: string) => {
+  return await supabase.rpc('use_admin_code', { 
+    registration_code: code, 
+    user_id: userId 
   });
 };

@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, User } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import Header from '@/components/Header';
 import { supabase } from '@/integrations/supabase/client';
+import { insertAdminRecord } from '@/integrations/supabase/rpc';
 
 const AdminRegister = () => {
   const navigate = useNavigate();
@@ -118,14 +119,12 @@ const AdminRegister = () => {
       if (signUpError) throw signUpError;
       
       if (authData.user) {
-        // Insert into admins table using raw SQL instead of from() method
-        // This bypasses the type checking issue
-        const { error: adminInsertError } = await supabase
-          .rpc('insert_admin_record', { 
-            admin_id: authData.user.id,
-            admin_full_name: fullName,
-            admin_email: email
-          });
+        // Insert admin record using our updated helper function
+        const { error: adminInsertError } = await insertAdminRecord(
+          authData.user.id,
+          fullName,
+          email
+        );
           
         if (adminInsertError) {
           console.error('Failed to insert admin record:', adminInsertError);
