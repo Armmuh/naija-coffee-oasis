@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
@@ -119,16 +118,14 @@ const AdminRegister = () => {
       if (signUpError) throw signUpError;
       
       if (authData.user) {
-        // Insert into admins table
+        // Insert into admins table using raw SQL instead of from() method
+        // This bypasses the type checking issue
         const { error: adminInsertError } = await supabase
-          .from('admins')
-          .insert([
-            { 
-              id: authData.user.id,
-              full_name: fullName,
-              email: email,
-            }
-          ]);
+          .rpc('insert_admin_record', { 
+            admin_id: authData.user.id,
+            admin_full_name: fullName,
+            admin_email: email
+          });
           
         if (adminInsertError) {
           console.error('Failed to insert admin record:', adminInsertError);
