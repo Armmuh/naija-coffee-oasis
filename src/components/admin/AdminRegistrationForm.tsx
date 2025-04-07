@@ -7,7 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { insertAdminRecord, validateAdminCode, useAdminCode } from '@/integrations/supabase/rpc';
+import { insertAdminRecord } from '@/integrations/supabase/rpc';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ExclamationTriangleIcon } from 'lucide-react';
+
+// Secret admin code constant
+const ADMIN_SECRET_CODE = 'SECRET123';
 
 interface FormData {
   fullName: string;
@@ -29,6 +34,7 @@ export const AdminRegistrationForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [generalError, setGeneralError] = useState<string | null>(null);
   
   // Form state
   const [formData, setFormData] = useState<FormData>({
@@ -54,6 +60,19 @@ export const AdminRegistrationForm = () => {
       ...prev,
       [id]: value
     }));
+    
+    // Clear error when user starts typing
+    if (errors[id as keyof FormErrors]) {
+      setErrors(prev => ({
+        ...prev,
+        [id]: ''
+      }));
+    }
+    
+    // Clear general error when user makes any change
+    if (generalError) {
+      setGeneralError(null);
+    }
   };
   
   const validateForm = () => {
@@ -77,7 +96,7 @@ export const AdminRegistrationForm = () => {
       newErrors.email = 'Email is required';
       valid = false;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+      newErrors.email = 'Please enter a valid email address';
       valid = false;
     }
     
@@ -100,6 +119,9 @@ export const AdminRegistrationForm = () => {
     if (!formData.registrationCode.trim()) {
       newErrors.registrationCode = 'Registration code is required';
       valid = false;
+    } else if (formData.registrationCode !== ADMIN_SECRET_CODE) {
+      newErrors.registrationCode = 'Invalid Admin Code. Please contact support for access.';
+      valid = false;
     }
     
     setErrors(newErrors);
@@ -114,21 +136,10 @@ export const AdminRegistrationForm = () => {
     }
     
     setLoading(true);
+    setGeneralError(null);
     
     try {
-      // Validate the registration code
-      const { data: isValid, error: codeError } = await validateAdminCode(formData.registrationCode);
-      
-      if (codeError || !isValid) {
-        setErrors(prev => ({
-          ...prev,
-          registrationCode: 'Invalid Admin Registration Code'
-        }));
-        setLoading(false);
-        return;
-      }
-      
-      // Proceed with user registration
+      // Proceed with user registration since code is valid
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -143,16 +154,6 @@ export const AdminRegistrationForm = () => {
       if (signUpError) throw signUpError;
       
       if (authData.user) {
-        // Mark the code as used
-        const { error: useCodeError } = await useAdminCode(
-          formData.registrationCode,
-          authData.user.id
-        );
-        
-        if (useCodeError) {
-          console.error('Failed to mark code as used:', useCodeError);
-        }
-        
         // Insert admin record
         const { error: adminInsertError } = await insertAdminRecord(
           authData.user.id,
@@ -176,6 +177,7 @@ export const AdminRegistrationForm = () => {
       }
     } catch (error: any) {
       console.error('Registration error:', error);
+      setGeneralError(error.message || 'Failed to create admin account. Please try again.');
       toast({
         title: 'Registration Failed',
         description: error.message || 'Failed to create admin account. Please try again.',
@@ -197,6 +199,13 @@ export const AdminRegistrationForm = () => {
         </CardHeader>
         
         <CardContent className="space-y-4">
+          {generalError && (
+            <Alert variant="destructive" className="mb-4">
+              <ExclamationTriangleIcon className="h-4 w-4" />
+              <AlertDescription>{generalError}</AlertDescription>
+            </Alert>
+          )}
+          
           <div className="space-y-2">
             <Label htmlFor="fullName">Full Name</Label>
             <Input
@@ -204,6 +213,7 @@ export const AdminRegistrationForm = () => {
               value={formData.fullName}
               onChange={handleInputChange}
               className={errors.fullName ? "border-destructive" : ""}
+              aria-invalid={!!errors.fullName}
             />
             {errors.fullName && (
               <p className="text-sm text-destructive">{errors.fullName}</p>
@@ -218,6 +228,7 @@ export const AdminRegistrationForm = () => {
               value={formData.email}
               onChange={handleInputChange}
               className={errors.email ? "border-destructive" : ""}
+              aria-invalid={!!errors.email}
             />
             {errors.email && (
               <p className="text-sm text-destructive">{errors.email}</p>
@@ -232,6 +243,7 @@ export const AdminRegistrationForm = () => {
               value={formData.password}
               onChange={handleInputChange}
               className={errors.password ? "border-destructive" : ""}
+              aria-invalid={!!errors.password}
             />
             {errors.password && (
               <p className="text-sm text-destructive">{errors.password}</p>
@@ -246,6 +258,7 @@ export const AdminRegistrationForm = () => {
               value={formData.confirmPassword}
               onChange={handleInputChange}
               className={errors.confirmPassword ? "border-destructive" : ""}
+              aria-invalid={!!errors.confirmPassword}
             />
             {errors.confirmPassword && (
               <p className="text-sm text-destructive">{errors.confirmPassword}</p>
@@ -259,6 +272,7 @@ export const AdminRegistrationForm = () => {
               value={formData.registrationCode}
               onChange={handleInputChange}
               className={errors.registrationCode ? "border-destructive" : ""}
+              aria-invalid={!!errors.registrationCode}
             />
             {errors.registrationCode && (
               <p className="text-sm text-destructive">{errors.registrationCode}</p>
