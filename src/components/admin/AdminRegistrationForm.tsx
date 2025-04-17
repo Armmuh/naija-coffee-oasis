@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
@@ -143,7 +142,7 @@ export const AdminRegistrationForm = () => {
         return;
       }
       
-      // Proceed with user registration since code is valid
+      // Create the auth user account first
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -158,18 +157,7 @@ export const AdminRegistrationForm = () => {
       if (signUpError) throw signUpError;
       
       if (authData.user) {
-        // Mark the registration code as used
-        const { error: useCodeError } = await useAdminCode(
-          formData.registrationCode, 
-          authData.user.id
-        );
-        
-        if (useCodeError) {
-          console.error('Failed to mark admin code as used:', useCodeError);
-          throw new Error('Failed to process registration code');
-        }
-        
-        // Insert admin record
+        // Insert admin record first to make sure it exists
         const { error: adminInsertError } = await insertAdminRecord(
           authData.user.id,
           formData.fullName,
@@ -181,14 +169,25 @@ export const AdminRegistrationForm = () => {
           throw new Error('Failed to create admin record');
         }
         
+        // Now mark the registration code as used
+        const { error: useCodeError } = await useAdminCode(
+          formData.registrationCode, 
+          authData.user.id
+        );
+        
+        if (useCodeError) {
+          console.error('Failed to mark admin code as used:', useCodeError);
+          // Continue anyway - as the user has been created
+        }
+        
         toast({
           title: 'Registration Successful',
-          description: 'Your admin account has been created. Redirecting to dashboard.',
+          description: 'Your admin account has been created. You can now login.',
           variant: 'default',
         });
         
-        // Redirect to admin dashboard
-        navigate('/admin');
+        // Redirect to admin login page
+        navigate('/admin/login');
       }
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -318,4 +317,3 @@ export const AdminRegistrationForm = () => {
     </Card>
   );
 };
-

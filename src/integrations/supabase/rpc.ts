@@ -28,10 +28,35 @@ export const validateAdminCode = async (code: string) => {
 
 /**
  * Use an admin registration code
+ * Note: This can only be called after the user is inserted in the auth.users table
+ * as it references the user_id in the users table
  */
 export const useAdminCode = async (code: string, userId: string) => {
-  return await supabase.rpc('use_admin_code', { 
-    registration_code: code, 
-    user_id: userId 
-  });
+  try {
+    // First insert the user into the profiles table if it doesn't exist
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert({ 
+        id: userId,
+        email: '', // Will be filled by the trigger
+        is_admin: true
+      }, { 
+        onConflict: 'id',
+        ignoreDuplicates: false
+      });
+    
+    if (profileError) {
+      console.error('Error ensuring profile exists:', profileError);
+      return { error: profileError };
+    }
+    
+    // Now we can safely use the admin code
+    return await supabase.rpc('use_admin_code', { 
+      registration_code: code, 
+      user_id: userId 
+    });
+  } catch (error) {
+    console.error('Error in useAdminCode:', error);
+    return { error };
+  }
 };

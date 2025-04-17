@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,7 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // If user is already logged in and is an admin, redirect to admin dashboard
   if (!loading && user && isAdmin) {
@@ -75,6 +76,7 @@ const AdminLogin = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    autoComplete="email"
                   />
                 </div>
                 <div className="space-y-2">
@@ -85,6 +87,7 @@ const AdminLogin = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    autoComplete="current-password"
                   />
                 </div>
               </CardContent>
@@ -101,7 +104,7 @@ const AdminLogin = () => {
                   <Button 
                     variant="link" 
                     className="p-0 h-auto text-coffee-accent"
-                    onClick={() => window.location.href = '/admin/register'}
+                    onClick={() => navigate('/admin/register')}
                   >
                     Register
                   </Button>
