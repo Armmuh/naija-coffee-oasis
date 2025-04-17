@@ -7,12 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { insertAdminRecord } from '@/integrations/supabase/rpc';
+import { insertAdminRecord, validateAdminCode, useAdminCode } from '@/integrations/supabase/rpc';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
-
-// Secret admin code constant
-const ADMIN_SECRET_CODE = 'SECRET123';
 
 interface FormData {
   fullName: string;
@@ -75,7 +72,7 @@ export const AdminRegistrationForm = () => {
     }
   };
   
-  const validateForm = () => {
+  const validateForm = async () => {
     let valid = true;
     const newErrors: FormErrors = {
       fullName: '',
@@ -119,9 +116,14 @@ export const AdminRegistrationForm = () => {
     if (!formData.registrationCode.trim()) {
       newErrors.registrationCode = 'Registration code is required';
       valid = false;
-    } else if (formData.registrationCode !== ADMIN_SECRET_CODE) {
-      newErrors.registrationCode = 'Invalid Admin Code. Please contact support for access.';
-      valid = false;
+    } else {
+      // Check if admin code is valid using the supabase function
+      const { data: isValid, error: codeError } = await validateAdminCode(formData.registrationCode);
+      
+      if (codeError || !isValid) {
+        newErrors.registrationCode = 'Invalid Admin Code. Please contact support for access.';
+        valid = false;
+      }
     }
     
     setErrors(newErrors);
@@ -131,14 +133,16 @@ export const AdminRegistrationForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
-      return;
-    }
-    
     setLoading(true);
     setGeneralError(null);
     
     try {
+      // Validate form first
+      if (!await validateForm()) {
+        setLoading(false);
+        return;
+      }
+      
       // Proceed with user registration since code is valid
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
@@ -154,6 +158,17 @@ export const AdminRegistrationForm = () => {
       if (signUpError) throw signUpError;
       
       if (authData.user) {
+        // Mark the registration code as used
+        const { error: useCodeError } = await useAdminCode(
+          formData.registrationCode, 
+          authData.user.id
+        );
+        
+        if (useCodeError) {
+          console.error('Failed to mark admin code as used:', useCodeError);
+          throw new Error('Failed to process registration code');
+        }
+        
         // Insert admin record
         const { error: adminInsertError } = await insertAdminRecord(
           authData.user.id,
@@ -303,3 +318,4 @@ export const AdminRegistrationForm = () => {
     </Card>
   );
 };
+
